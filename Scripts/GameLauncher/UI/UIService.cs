@@ -1,92 +1,65 @@
+using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using PrismaDot.GameLauncher.UI;
 using Godot;
-// // using UnityEngine.AddressableAssets; (To be replaced with Godot ResourceLoader)
-using VContainer;
+using PrismaDot.Infrastructure;
+using PrismaDot.Infrastructure.Assets;
 
-namespace PrismaDot.GameMain.UI
+namespace PrismaDot.GameLauncher.UI
 {
-    [UsedImplicitly]
     public class UIService : IUIService
     {
-        private static UIService _instance;
-        public static UIService Instance => _instance;
+        private readonly Dictionary<string, IUIWindow> _openedWindows = new();
+        private Node _uiRoot;
 
-        // ��Ȼ����"ջ"��Stack������������������ѭ����ȳ�ԭ�򣬲��һᷢ�������Եĵ��ã����ʹ������
-        // UI ջ����¼��˳��
-        private readonly LinkedList<UIWindow> _windowStack = new();
-        private readonly Dictionary<int, UIWindow> _allWindows = new();
-
-        public async Task StartAsync(CancellationToken cancellation)
+        public void Initialize(Node uiRoot)
         {
-            _instance = this;
-            await LoadEssentialsAssets();
+            _uiRoot = uiRoot;
         }
 
-        private async Task LoadEssentialsAssets()
+        public async Task<T> OpenAsync<T>(string key) where T : class, IUIWindow
         {
-            // await 
-            await Task.CompletedTask;
-        }
-
-        public async Task<T> OpenAsync<T>(object args = null) where T : UIWindow
-        {
-            string key = typeof(T).Name;
-
-            // 1. Դȡ
-            // ע⣺ LoadAssetAsync ص handle
-            //  _assetProvider װҪȷܷ handle ṩ Release 
-            var prefab = ResourceLoader.Load<PackedScene>(key);
-
-            // ... ʵ ...
-            var instance = prefab.Instantiate();
-            var window = instance.GetComponent<T>();
-            // 2. Ѿ
-            // window.AssetHandle = handle;
-
-            // 3. ӵֵջ
-            _allWindows[window.GetInstanceID()] = window;
-            _windowStack.AddLast(window);
-
-            return window;
-        }
-
-        /// <summary>
-        /// ȡѴ򿪵Ĵ
-        /// </summary>
-        public T GetWindow<T>() where T : UIWindow
-        {
-            foreach (var window in _allWindows.Values)
+            if (_openedWindows.TryGetValue(key, out var window))
             {
-                if (window is T result)
+                return window as T;
+            }
+
+            // Use our new Assets abstraction
+            var scene = await Assets.LoadAsync<PackedScene>(key);
+            if (scene == null)
+            {
+                Debugger.LogError($"Failed to load UI Window: {key}");
+                return null;
+            }
+
+            var instance = scene.Instantiate();
+            _uiRoot.AddChild(instance);
+
+            var uiWindow = instance as IUIWindow;
+            if (uiWindow == null)
+            {
+                Debugger.LogError($"Prefab at {key} does not implement IUIWindow.");
+                instance.QueueFree();
+                return null;
+            }
+
+            _openedWindows[key] = uiWindow;
+            await uiWindow.OpenAsync();
+            return uiWindow as T;
+        }
+
+        public void Close(string key)
+        {
+            if (_openedWindows.TryGetValue(key, out var window))
+            {
+                window.Close();
+                if (window is Node node)
                 {
-                    return result;
+                    node.QueueFree();
                 }
+                _openedWindows.Remove(key);
+                Assets.Unload(key);
             }
-
-            return null;
-        }
-
-        public void Close(int instanceId)
-        {
-            if (_allWindows.TryGetValue(instanceId, out var window))
-            {
-                // 1.  Node
-                window.Node.QueueFree();
-
-                // 2. ġͷ Addressables ü
-                // Managed by Godot GC
-
-                _allWindows.Remove(instanceId);
-            }
-        }
-
-
-        public void Dispose()
-        {
         }
     }
 }

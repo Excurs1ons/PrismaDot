@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using PrismaDot.GameLauncher.UI;
 using Godot;
-// using UnityEngine.Networking;
 using PrismaDot.Infrastructure;
+using PrismaDot.Infrastructure.Network;
 
 namespace PrismaDot.GameLauncher.Boot.Procedures;
 
@@ -28,20 +28,17 @@ public class ProcedureCheckAppVersion : BootProcedure
         switch (result)
         {
             case CheckResult.Failed:
-                // ʾ
                 _updateView.SetProgress(0f, "Download Error!");
                 Debugger.LogError("Failed to check version.");
-                context.ShowMessageBox(title: "", content: "ӡ", () => OnEnter(context));
-
+                context.ShowMessageBox(title: "Error", content: "Failed to check version. Retry?", () => OnEnter(context));
                 break;
             case CheckResult.NeedUpdate:
-                // ʾ
+                // Handle Update
                 break;
             case CheckResult.NeedRestart:
-                // ʾ
+                // Handle Restart
                 break;
             case CheckResult.Success:
-                // תϷ
                 context.ChangeState<ProcedureCheckResourcesVersion>(context);
                 break;
         }
@@ -49,7 +46,6 @@ public class ProcedureCheckAppVersion : BootProcedure
 
     private async Task<CheckResult> CheckVersionAsync(BootSequenceManager context)
     {
-
         _updateView.SetProgress(0f, "Checking Version...");
         var data = await FetchLatestVersionInfoAsync(context);
         if (data == null)
@@ -58,7 +54,7 @@ public class ProcedureCheckAppVersion : BootProcedure
             return CheckResult.Failed;
         }
 
-        Debugger.Log($"<color=green>Fetched {data.Length} bytes of app config data.");
+        Debugger.Log($"Fetched {data.Length} bytes of app config data.");
         var version = ConfigManager.LoadConfigFromBytes<AppVersionManifest>(data);
         if (version == null)
         {
@@ -66,16 +62,15 @@ public class ProcedureCheckAppVersion : BootProcedure
             return CheckResult.Failed;
         }
 
-        Debugger.Log($"<color=green>Latest Version: {version}");
+        Debugger.Log($"Latest Version: {version}");
         await Task.Delay(500);
         _updateView.SetProgress(30f);
-        await Task.Delay(2000);
+        await Task.Delay(500);
         _updateView.SetProgress(70f);
-        await Task.Delay(2000);
+        await Task.Delay(500);
         _updateView.progressBar.SetText("Version Checking Finished.");
 
         _updateView.SetProgress(100f);
-        await Task.CompletedTask;
         return CheckResult.Success;
     }
 
@@ -89,33 +84,22 @@ public class ProcedureCheckAppVersion : BootProcedure
         }
 
         var remoteAppConfigUrl = localAppConfig.StoreUrl;
-        /*
-        using var downloadHandler = new DownloadHandlerBuffer();
 
-        var request = new UnityWebRequest(remoteAppConfigUrl)
-        {
-            downloadHandler = downloadHandler,
-            timeout = 5,
-            // method = "GET",
-            useHttpContinue = true
-        };
+        using var request = WebRequest.Get(remoteAppConfigUrl);
         request.SetRequestHeader("Accept-Encoding", "gzip, deflate");
         request.SetRequestHeader("Content-Type", "application/json");
         request.SetRequestHeader("Accept", "application/json");
-        request.SetRequestHeader("User-Agent",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+        request.SetRequestHeader("User-Agent", "PrismaDot/1.0");
 
         Debugger.Log($"Fetching latest version info from {remoteAppConfigUrl}...");
-        await request.SendWebRequest().ToTask();
-        if (request.result != UnityWebRequest.Result.Success)
+        await request.SendAsync();
+        
+        if (!request.IsSuccess)
         {
-            Debugger.LogError($"Failed to fetch latest version info: {request.error}");
+            Debugger.LogError($"Failed to fetch latest version info: {request.Error}");
             return null;
         }
-        
-        return downloadHandler.data;
-        */
-        await Task.CompletedTask;
-        return null;
+
+        return request.Data;
     }
 }

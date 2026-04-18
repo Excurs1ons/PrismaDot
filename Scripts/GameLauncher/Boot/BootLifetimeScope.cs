@@ -1,79 +1,36 @@
-using MessagePipe;
+using Microsoft.Extensions.DependencyInjection;
+using PrismaDot.Infrastructure.Container;
 using PrismaDot.GameLauncher.Boot.Procedures;
-using PrismaDot.GameLauncher.Events;
 using PrismaDot.GameLauncher.UI;
-using Godot;
-using VContainer;
-// using VContainer.Unity;
 
 namespace PrismaDot.GameLauncher.Boot
 {
-    public class BootLifetimeScope : LifetimeScope
+    public partial class BootLifetimeScope : AppScope
     {
-        public UpdateView updateView;
-        public VersionInfoView versionInfoView;
-
-        public BootMenuView bootMenuView;
-        public ModalWindowView modalWindow;
-        public BootSettingsPanelView bootSettingsPanelView;
-
-        protected override void Configure(IContainerBuilder builder)
+        protected override void Configure(IServiceCollection services)
         {
-            builder.Register<ProcedureInit>(Lifetime.Scoped).As<BootProcedure>();
+            // æ³¨å†Œæ‰€æœ‰å¯åŠ¨æµç¨‹
+            services.AddTransient<ProcedureInit>();
+            services.AddTransient<ProcedureCheckAppVersion>();
+            services.AddTransient<ProcedureCheckResourcesVersion>();
+            services.AddTransient<ProcedureVerifyResources>();
+            services.AddTransient<ProcedureUpdateResources>();
+            services.AddTransient<ProcedurePatchResources>();
+            services.AddTransient<ProcedureFixResources>();
+            services.AddTransient<ProcedureLoadHotfix>();
+            services.AddTransient<ProcedureStartGame>();
+            services.AddTransient<ProcedureHub>();
+            services.AddTransient<ProcedureRestart>();
 
-            builder.Register<ProcedureCheckAppVersion>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureCheckNetwork>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureCheckResourcesVersion>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureLoadHotfix>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureFixResources>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureVerifyResources>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedurePatchResources>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureUpdateResources>(Lifetime.Scoped).As<BootProcedure>();
-
-            builder.Register<ProcedureRestart>(Lifetime.Scoped).As<BootProcedure>();
-
-
-            // new Proce
-            // dureCheckNetwork(),
-            // new ProcedureCheckAppVersion(),
-            // new ProcedureCheckResourcesVersion(),
-            // new ProcedureLoadHotfix(),
-            // new ProcedureFixResources(),
-            // new ProcedureVerifyResources(),
-            // new ProcedurePatchResources(),
-            // new ProcedureUpdateResources(),
-            // new ProcedureRestart(),
-
-            builder.Register<BootSequenceManager>(Lifetime.Scoped);
-            // ×¢²á³¡¾°UI
-            // builder.RegisterComponentInHierarchy<BooterView>();
-            builder.RegisterComponentInHierarchy<UpdateView>();
-            builder.RegisterComponentInHierarchy<VersionInfoView>();
-            builder.RegisterComponentInHierarchy<BootMenuView>();
-            builder.RegisterComponentInHierarchy<ModalWindowView>();
-            builder.RegisterComponentInHierarchy<BootSettingsPanelView>();
-            // === MessagePipe: ÊÂ¼ş×ÜÏß ===
-            // ÀàĞÍ°²È«µÄ·¢²¼¶©ÔÄ£¬½âñî×é¼ş¼äÍ¨ĞÅ
-            var options = builder.RegisterMessagePipe();
-            builder.RegisterMessageBroker<GameEvent>(options);
-            builder.RegisterMessageBroker<PlayerEvent>(options);
-
-            // 1. ×¢²á Logger<> ÀàĞÍ£¬²¢Ö¸¶¨µ¥Àı
-            // 2. Ê¹ÓÃ .As() ¸æËßÈİÆ÷ËüÊµÏÖÁË ILogger<> ½Ó¿Ú
-            // builder.Register(typeof(Logger<>), Lifetime.Singleton).As(typeof(ILogger<>));
-
-            // builder.Register<IAssetProvider, AddressablesProvider>(Lifetime.Singleton);
-            // === ÓÎÏ·Æô¶¯Èë¿Ú ===
-            builder.RegisterEntryPoint<GameBootstrapper>();
+            // æ³¨å†Œå¯åŠ¨åºåˆ—ç®¡ç†å™¨
+            services.AddSingleton<BootSequenceManager>();
         }
 
-
+        protected override void OnContainerBuilt(IServiceContainer container)
+        {
+            // å¯åŠ¨åºåˆ—åœ¨è¿™é‡Œå¼€å§‹
+            var manager = container.Resolve<BootSequenceManager>();
+            manager.Start<ProcedureInit>();
+        }
     }
 }

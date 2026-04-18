@@ -1,22 +1,19 @@
-// Assets/Scripts/Network/AssetDownloader.cs
-
 using System;
-using System.Collections;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Godot;
-// using UnityEngine.Networking;
+using PrismaDot.Infrastructure;
+using PrismaDot.Infrastructure.Network;
 
 namespace PrismaDot.GameLauncher.Network;
 
 public class AssetDownloader : Node
 {
     public delegate void DownloadProgress(float progress, ulong downloaded, ulong total);
-
     public event DownloadProgress OnProgress;
 
     public delegate void DownloadComplete(bool success, string error);
-
     public event DownloadComplete OnComplete;
 
     private string _assetHost;
@@ -32,79 +29,64 @@ public class AssetDownloader : Node
         _chunkSize = chunkSize;
     }
 
-    public IEnumerator DownloadFile(string url, string savePath, ulong expectedSize, string expectedHash,
-        bool ssl = false)
+    public async Task DownloadFileAsync(string url, string savePath, ulong expectedSize, string expectedHash, bool ssl = false)
     {
-        string fullPath = Path.Combine(Application.persistentDataPath, savePath);
+        // Use user:// for Godot persistent data path
+        string fullPath = ProjectSettings.GlobalizePath("user://" + savePath);
         string directory = Path.GetDirectoryName(fullPath);
 
-        if (string.IsNullOrEmpty(directory))
-        {
-            yield break;
-        }
+        if (string.IsNullOrEmpty(directory)) return;
 
         if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        // 检查文件是否已存在且完�?
         if (File.Exists(fullPath))
         {
             if (VerifyFile(fullPath, expectedSize, expectedHash))
             {
                 OnComplete?.Invoke(true, null);
-                yield break;
+                return;
             }
-
             File.Delete(fullPath);
         }
 
-        var urlProtocol = ssl ? "http://" : "https://";
+        var urlProtocol = ssl ? "https://" : "http://";
         string downloadUrl = $"{urlProtocol}{_assetHost}:{_port}/{url}";
 
-        // TODO: Use Godot.HttpRequest
-        /*
-        using UnityWebRequest request = UnityWebRequest.Get(downloadUrl);
-        request.timeout = _timeout;
+        Debugger.Log($"Downloading {downloadUrl} to {fullPath}");
 
-        DownloadHandlerFile handler = new DownloadHandlerFile(fullPath);
-        handler.removeFileOnAbort = true;
-        request.downloadHandler = handler;
+        using var request = WebRequest.Get(downloadUrl);
+        // Note: Currently IWebRequest doesn't support streaming to file directly in this simple abstraction.
+        // For production, we should add DownloadToFile support to IWebRequest.
+        
+        await request.SendAsync();
 
-        var operation = request.SendWebRequest();
-
-        ulong totalBytes = expectedSize > 0u ? expectedSize : 0u;
-
-        while (!operation.isDone)
+        if (request.IsSuccess)
         {
-            if (totalBytes > 0)
+            try 
             {
-                float progress = request.downloadedBytes / (float)totalBytes;
-                OnProgress?.Invoke(progress, request.downloadedBytes, totalBytes);
+                await File.WriteAllBytesAsync(fullPath, request.Data);
+                if (VerifyFile(fullPath, expectedSize, expectedHash))
+                {
+                    OnComplete?.Invoke(true, null);
+                }
+                else
+                {
+                    File.Delete(fullPath);
+                    OnComplete?.Invoke(false, "File verification failed");
+                }
             }
-
-            yield return null;
-        }
-
-        if (request.result == UnityWebRequest.Result.Success)
-        {
-            if (VerifyFile(fullPath, expectedSize, expectedHash))
+            catch (Exception ex)
             {
-                OnComplete?.Invoke(true, null);
-            }
-            else
-            {
-                File.Delete(fullPath);
-                OnComplete?.Invoke(false, "File verification failed");
+                OnComplete?.Invoke(false, $"IO Error: {ex.Message}");
             }
         }
         else
         {
-            OnComplete?.Invoke(false, request.error);
+            OnComplete?.Invoke(false, request.Error);
         }
-        */
-        yield break;
     }
 
     private bool VerifyFile(string path, ulong expectedSize, string expectedHash)
@@ -131,6 +113,8 @@ public class AssetDownloader : Node
         using SHA256 sha256 = SHA256.Create();
         using FileStream stream = File.OpenRead(path);
         byte[] hash = sha256.ComputeHash(stream);
-        return $"sha256:{BitConverter.ToString(hash).Replace("-", "").ToLower()}";
+        // Ensure format matches expected (e.g., "sha256:...")
+        string hashStr = BitConverter.ToString(hash).Replace("-", "").ToLower();
+        return expectedHash.StartsWith("sha256:") ? $"sha256:{hashStr}" : hashStr;
     }
 }
