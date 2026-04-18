@@ -1,0 +1,24 @@
+using System.Threading.Tasks;
+using PrismaDot.GameLauncher.Localization;
+using R3;
+
+namespace PrismaDot.GameLauncher.Infrastructure.Interfaces
+{
+    public interface IDownloadService:IGameService
+    {
+        // 0.0 ~ 1.0 的进度流 (UI 只需要订阅这个)
+        ReadOnlyReactiveProperty<float> Progress { get; }
+
+        // 当前下载状态描述 (比如 "正在下载资源 3/10MB...")
+        // ReadOnlyReactiveProperty<string> StateDescription { get; }
+        // 本地化的实现
+        ReadOnlyReactiveProperty<LocalizedData> StateDescription { get; }
+
+
+        // 检查是否有更新
+        Task<bool> CheckUpdateAsync();
+
+        // 开始下载
+        Task StartDownloadAsync();
+    }
+}

@@ -1,0 +1,1 @@
+namespace PrismaDot.GameLauncher.Boot;

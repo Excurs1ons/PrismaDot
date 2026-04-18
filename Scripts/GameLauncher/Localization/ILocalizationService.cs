@@ -1,0 +1,15 @@
+using PrismaDot.GameLauncher.Infrastructure.Interfaces;
+using R3;
+
+namespace PrismaDot.GameLauncher.Localization
+{
+    public interface ILocalizationService : IGameService
+    {
+        // 全局语言版本号 (0, 1, 2...)
+        // 这是一个极轻量的“心跳”，View 只要监听这个 int 变化
+        ReadOnlyReactiveProperty<int> Revision { get; }
+        string GetText(string key, params object[] args);
+        string GetText(LocalizationKey key, params object[] args);
+        string GetText(LocalizedData data);
+    }
+}
