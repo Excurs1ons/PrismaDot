@@ -1,14 +1,13 @@
-# PrismaDot Framework 技术文档 (V1.0)
+# PrismaDot 框架指南
 
-## 1. 核心设计理念 (Architecture Vision)
-PrismaDot 是一个从 Unity `PrismaFramework` 演化而来的**微内核、跨引擎驱动**的 C# 游戏开发框架。
-*   **引擎解耦 (Engine Agnostic)**: 核心逻辑层（GameLogic）不依赖具体引擎 API，通过接口驱动。
-*   **微内核 (Micro-kernel)**: 仅保留最基础的日志、资源、网络、注入系统作为内核，其余功能作为扩展。
-*   **现代 .NET 生态**: 放弃特定引擎插件（如 UniTask, VContainer），全面拥抱标准 .NET 库（Microsoft.Extensions.DI, System.Text.Json, Task）。
+## 1. 核心设计
+PrismaDot 是一个旨在适配 GodotSharp 的 C# 游戏框架，它是从 Unity 的 PrismaFramework 迁移而来。
+*   **引擎 API 抽象**: 核心逻辑通过接口与具体引擎解耦。
+*   **通用标准库**: 使用 Microsoft.Extensions.DI、System.Text.Json 和标准 Task。
 
 ---
 
-## 2. 核心模块详解
+## 2. 核心组件
 
 ### 2.1 调试系统 (Debugger)
 统一的日志分发中心，自动适配 Godot 控制台或 Unity 控制台。

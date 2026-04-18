@@ -1,20 +1,7 @@
-<Project Sdk="Godot.NET.Sdk/4.3.0">
+<Project Sdk="Godot.NET.Sdk/4.6.2">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <RootNamespace>PrismaDot</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <PublishAot>true</PublishAot>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
-
-  <ItemGroup>
-    <TrimmerRootAssembly Include="GodotSharp" />
-    <TrimmerRootAssembly Include="$(TargetName)" />
-  </ItemGroup>
-
-  <!-- Add Microsoft.Extensions.DependencyInjection as a standard DI replacement for VContainer -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-  </ItemGroup>
 </Project>

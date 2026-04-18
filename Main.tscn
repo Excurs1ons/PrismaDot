@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://bmwgptk86188s"]
+
+[node name="Main" type="Node" unique_id=804835749]
+
+[node name="Root" type="Node" parent="." unique_id=597314111]
