@@ -8,7 +8,6 @@ using PrismaDot.Procedures;
 using PrismaDot.Container;
 using PrismaDot.Assets;
 using PrismaDot.Network;
-using PrismaDot.Logging;
 
 /// <summary>
 /// Main Godot Boot Node - using Prisma Framework
