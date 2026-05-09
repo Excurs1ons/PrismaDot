@@ -1,5 +1,8 @@
 # Godot 4.x metadata
 .godot/
+
+# Hidden folders - ignore all
+.*/
 # Godot 3.x mono metadata (for completeness)
 .mono/
 

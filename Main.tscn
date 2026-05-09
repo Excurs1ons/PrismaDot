@@ -1,5 +1,34 @@
 [gd_scene format=3 uid="uid://bmwgptk86188s"]
 
+[ext_resource type="Script" uid="uid://dfuhbuc0xq4bx" path="res://scripts/GodotBoot.cs" id="1"]
+
 [node name="Main" type="Node" unique_id=804835749]
 
-[node name="Root" type="Node" parent="." unique_id=597314111]
+[node name="Boot" type="Node" parent="." unique_id=1731247878]
+script = ExtResource("1")
+
+[node name="UIRoot" type="CanvasLayer" parent="Boot" unique_id=1217417770]
+
+[node name="ColorRect_SafeArea" type="ColorRect" parent="Boot/UIRoot" unique_id=32202355]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(1280, 540)
+pivot_offset_ratio = Vector2(1280, 540)
+color = Color(0, 0, 0, 0.18431373)
+metadata/_edit_use_anchors_ = true
+
+[node name="ColorRect" type="ColorRect" parent="Boot/UIRoot" unique_id=883788933]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1359.9995
+offset_bottom = -480.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(600, 300)
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(1, 1, 1, 0.18431373)

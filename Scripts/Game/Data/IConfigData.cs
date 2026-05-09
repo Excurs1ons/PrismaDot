@@ -1,10 +1,9 @@
 using System.Collections.Generic;
-using ZLinq;
 
 namespace PrismaDot.Game.Data;
 
 /// <summary>
-/// 条目型数据接口 适用于CSV数据
+/// 锟斤拷目锟斤拷锟斤拷锟捷接匡拷 锟斤拷锟斤拷锟斤拷CSV锟斤拷锟斤拷
 /// </summary>
 public interface IConfigData
 {
@@ -12,12 +11,12 @@ public interface IConfigData
 }
 
 /// <summary>
-/// 表格型配置接口 适用于CSV表格
+/// 锟斤拷锟斤拷锟斤拷锟斤拷锟矫接匡拷 锟斤拷锟斤拷锟斤拷CSV锟斤拷锟斤拷
 /// </summary>
 public interface IConfigDataTable<out T> where T : IConfigData
 {
     /// <summary>
-    /// 主键字段
+    /// 锟斤拷锟斤拷锟街讹拷
     /// </summary>
     string PrimaryKey { get; }
 
@@ -27,7 +26,7 @@ public interface IConfigDataTable<out T> where T : IConfigData
 }
 
 /// <summary>
-/// 对象型配置接口 适用于Json/Resource
+/// 锟斤拷锟斤拷锟斤拷锟斤拷锟矫接匡拷 锟斤拷锟斤拷锟斤拷Json/Resource
 /// </summary>
 public interface IConfig
 {

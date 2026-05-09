@@ -1,6 +1,6 @@
 using Godot;
 
-public class World : Node
+public partial class World : Node
 {
     // Start is called once before the first execution of Update after the Node is created
     void Start()

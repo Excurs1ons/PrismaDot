@@ -1,14 +1,9 @@
 using System;
 using System.IO;
-#if !UNITY_EDITOR
-using System.IO;
-#endif
-
-using ZLinq;
 using System.Reflection;
 using System.Threading;
-using Cysharp.Text;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Text;
 using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using PrismaDot.GameLauncher.Infrastructure.Interfaces;
@@ -22,58 +17,42 @@ namespace PrismaDot.GameLauncher.Boot
     {
         public static IGameEntry Resolve()
         {
+            // Godot 4.x: Load assembly from plugins folder
             var asm = LoadHotfixAssembly();
             if (asm == null)
             {
-                GameBootstrapper.Logger.LogInformation("Failed to load hotfix assembly");
+                GameBootstrapper.Logger.LogInformation("No hotfix assembly found, using built-in entry");
                 return null;
             }
 
             var entryType = asm.GetType("PrismaDot.GameMain.MainEntry", throwOnError: true);
-
             return (IGameEntry)Activator.CreateInstance(entryType);
         }
 
         private static Assembly LoadHotfixAssembly()
         {
-#if UNITY_EDITOR
-            //输出全部程序集
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            using var sb = ZString.CreateStringBuilder();
-
-            sb.AppendLine("========== [Assembly Dump Start] ==========");
-            sb.AppendFormat("Total Assemblies: {0}", assemblies.Length);
-            sb.AppendLine();
-            foreach (var asm in assemblies)
+            // Look for DLL in plugins folder
+            var pluginsPath = Path.Combine("res://", "plugins");
+            if (!DirAccess.Exists(pluginsPath))
             {
-                sb.AppendLine(asm.GetName().Name);
+                return null;
             }
 
-            GameBootstrapper.Logger.LogInformation(sb.ToString());
-            return assemblies.AsValueEnumerable()
-                .First(a => a.GetName().Name.Contains("GameMain", StringComparison.OrdinalIgnoreCase));
-
-#else
-            var bytes = File.ReadAllBytes(GetHotfixDllPath());
-            var asm = Assembly.Load(bytes);
-            if(asm == null)
-            { 
-                GameBootstrapper.Logger.LogInformation("Failed to load hotfix assembly");
-            }
-            return asm;
-#endif
-
-#pragma warning disable CS8321 // 已声明本地函数，但从未使用过
-            [UsedImplicitly]
-            static string GetHotfixDllPath()
+            var dllPath = Path.Combine(pluginsPath, "GameMain.dll");
+            if (!FileAccess.Exists(dllPath))
             {
-                var path = Path.Combine(Application.streamingAssetsPath, GlobalDefinitions.MAIN_DLL_NAME + ".bytes");
-                if (!File.Exists(path))
-                {
-                    throw new FileNotFoundException($"Hotfix assembly not found at {path}");
-                }
+                return null;
+            }
 
-                return path;
+            try
+            {
+                var bytes = FileAccess.GetFileAsBytes(dllPath);
+                return Assembly.Load(bytes);
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"Failed to load hotfix assembly: {ex.Message}");
+                return null;
             }
         }
     }

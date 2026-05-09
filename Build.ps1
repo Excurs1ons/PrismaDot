@@ -1,0 +1,1 @@
+﻿dotnet publish -c ExportRelease -p:Platform="Any CPU" --self-contained -p:IlcGenerateStackTraceData=false -r win-x64

@@ -6,7 +6,7 @@ public abstract class BootProcedure : IBootProcedure
 {
     public virtual void OnEnter(BootSequenceManager context)
     {
-        GD.Print($"<color=cyan>[{GetType().Name}]已进�?);
+        GD.Print($"[{GetType().Name}] OnEnter");
     }
 
     public virtual void OnUpdate(BootSequenceManager context, float deltaTime)
@@ -15,7 +15,7 @@ public abstract class BootProcedure : IBootProcedure
 
     public virtual void OnExit(BootSequenceManager context)
     {
-        GD.Print($"<color=cyan>[{GetType().Name}]已退�?);
+        GD.Print($"[{GetType().Name}] OnExit");
     }
 
     public virtual void OnEnter(IContext context)
@@ -38,6 +38,6 @@ public abstract class BootProcedure : IBootProcedure
 
     public virtual void Dispose()
     {
-        GD.Print($"<color=cyan>[{GetType().Name}]已销�?);
+        GD.Print($"[{GetType().Name}] Disposed");
     }
 }

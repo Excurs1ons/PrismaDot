@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using System.Threading.Tasks;
 using Godot;
 
 namespace PrismaDot.GameLauncher.SDKs;
@@ -8,9 +7,9 @@ public class DummyProvider : ISDKProvider
 {
     public string ProviderName => "DummyProvider";
 
-    public DummyProvider()
+public DummyProvider()
     {
-        GD.PrintWarning("Ã»ÓÐSDK");
+        GD.PushWarning("æ²¡æœ‰SDK");
     }
     public Task<bool> InitializeAsync()
     {

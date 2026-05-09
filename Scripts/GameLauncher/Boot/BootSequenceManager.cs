@@ -1,48 +1,42 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using PrismaDot.GameLauncher.Boot.Procedures;
-using PrismaDot.GameLauncher.UI;
 using Godot;
-// using UnityEngine.Events;
-using VContainer;
-// using VContainer.Unity;
 
 namespace PrismaDot.GameLauncher.Boot;
 
-public class BootSequenceManager : FiniteStateMachine<BootSequenceManager>, IProcedureContext
+public class BootSequenceManager : Node, IProcedureContext
 {
-    
+    private readonly Dictionary<Type, BootProcedure> _stateDict = new();
+
     public static Type InitState => typeof(ProcedureInit);
 
-    [UsedImplicitly]
-    public BootSequenceManager(IEnumerable<BootProcedure> states)
+    public BootSequenceManager()
     {
-        foreach (var state in states)
-        {
-            var t = state.GetType();
-            GD.Print($"<color=cyan>[BootSequenceManager]</color> 加载状�? {t.Name}");
-            stateDict.Add(t, state);
-        }
-
-        GD.Print($"<color=cyan>[BootSequenceManager]</color> 已加载{stateDict.Count}个状�?);
+        GD.Print("[BootSequenceManager] Created");
     }
 
-    public override void ChangeState(Type type, BootSequenceManager context)
+    public void RegisterState(BootProcedure state)
     {
-        GD.Print($"<color=cyan>[BootSequenceManager]</color> 正在切换状�? {type.Name}");
-        base.ChangeState(type, context);
+        var t = state.GetType();
+        _stateDict[t] = state;
+        GD.Print($"[BootSequenceManager] Registered state: {t.Name}");
     }
 
-    public void ShowMessageBox(string title, string content, UnityAction action)
-    {
-    }
-
-    public void Begin<T>()
+    public void Begin<T>() where T : BootProcedure
     {
         var type = typeof(T);
-        ChangeState(type, this);
+        if (_stateDict.TryGetValue(type, out var state))
+        {
+            GD.Print($"[BootSequenceManager] Beginning: {type.Name}");
+            state.OnEnter(this);
+        }
     }
+
+    public void ShowMessageBox(string title, string content, Action action)
+    {
+        // Godot implementation
+    }
+
+    public float Progress { get; set; }
+    public string Description { get; set; }
 }

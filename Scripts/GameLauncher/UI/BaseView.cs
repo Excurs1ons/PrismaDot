@@ -1,110 +1,94 @@
 using System;
+using System.Threading.Tasks;
 using PrismaDot.GameLauncher.UI.Tween;
 using Godot;
-// using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace PrismaDot.GameLauncher.UI
 {
-    public abstract class BaseView : Node, IView
+    public abstract partial class BaseView : Control, IView
     {
-        public RectTransform cachedRect;
-        public Node cachedNode;
-        public Transform cachedTransform;
-        public CanvasGroup cachedCanvasGroup;
-        public UITween tween;
-        public AsyncOperationHandle AssetHandle { get; set; }
+        public Control CachedRect => this;
+        public Node CachedNode => this;
+        public CanvasGroup CachedCanvasGroup;
+        
+        public UITween Tween;
 
-        protected virtual void Awake()
+        public override void _Ready()
         {
-#if UNITY_EDITOR
             SetupRefs();
-#endif
-        }
-
-        protected virtual void OnValidate()
-        {
-#if UNITY_EDITOR
-            SetupRefs();
-#endif
         }
 
         private void SetupRefs()
         {
-            if (cachedRect == null)
+            // In Godot, a View usually is the root of its own scene.
+            // If we need a CanvasGroup, we can search for one or assume it's attached.
+            if (CachedCanvasGroup == null)
             {
-                cachedRect = GetComponent<RectTransform>();
+                CachedCanvasGroup = GetNodeOrNull<CanvasGroup>("CanvasGroup") ?? (this as CanvasGroup);
             }
 
-            if (cachedNode == null)
+            if (Tween == null)
             {
-                cachedNode = Node;
-            }
-
-            if (cachedTransform == null)
-            {
-                cachedTransform = transform;
-            }
-
-            if (cachedCanvasGroup == null)
-            {
-                cachedCanvasGroup = GetComponent<CanvasGroup>();
+                Tween = GetNodeOrNull<UITween>("Tween");
             }
         }
 
         public virtual async void Open()
         {
-            cachedNode.Visible = true;
-            if (tween)
-                await tween.AfterShow();
+            Visible = true;
+            if (Tween != null)
+                await Tween.AfterShow();
         }
 
         public virtual async void Close()
         {
-            if (tween)
-                await tween.BeforeHide();
-            cachedNode.Visible = false;
+            if (Tween != null)
+                await Tween.BeforeHide();
+            Visible = false;
         }
 
-        public bool isMinimized { get; set; }
+        public bool IsMinimized { get; set; }
 
         public virtual async void Show()
         {
-            if (!IsMinimized())
+            if (!CheckIsMinimized())
             {
                 Open();
             }
 
-            cachedRect.localScale = Vector3.one;
-            isMinimized = false;
-            if (tween)
-                await tween.AfterShow();
+            Scale = Vector2.One;
+            IsMinimized = false;
+            
+            if (Tween != null)
+                await Tween.AfterShow();
+            
+            AfterShow();
         }
 
         public virtual async void Hide()
         {
-            if (isMinimized || IsMinimized())
+            if (IsMinimized || CheckIsMinimized())
             {
                 return;
             }
 
-            if (tween)
-                await tween.BeforeHide();
-            cachedRect.localScale = Vector3.zero;
-            isMinimized = true;
+            if (Tween != null)
+                await Tween.BeforeHide();
+            
+            Scale = Vector2.Zero;
+            IsMinimized = true;
+            
+            BeforeHide();
         }
 
-        private bool IsMinimized()
+        private bool CheckIsMinimized()
         {
-            isMinimized = cachedRect.localScale == Vector3.zero;
-            return isMinimized;
+            IsMinimized = Scale == Vector2.Zero;
+            return IsMinimized;
         }
 
-        public virtual void AfterShow()
-        {
-        }
+        public virtual void AfterShow() { }
 
-        public virtual void BeforeHide()
-        {
-        }
+        public virtual void BeforeHide() { }
     }
 }
