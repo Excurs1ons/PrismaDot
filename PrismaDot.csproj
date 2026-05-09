@@ -1,7 +1,17 @@
 <Project Sdk="Godot.NET.Sdk/4.6.2">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="scripts\GameMain\**" />
+    <Compile Remove="scripts\Game\**" />
+    <Compile Remove="scripts\GameLauncher\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="scripts\GameMain\**" />
+    <EmbeddedResource Remove="scripts\Game\**" />
+    <EmbeddedResource Remove="scripts\GameLauncher\**" />
+  </ItemGroup>
 </Project>

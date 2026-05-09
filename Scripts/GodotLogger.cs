@@ -1,40 +1,37 @@
 using Godot;
 using System;
+using Microsoft.Extensions.Logging;
+namespace PrismaDot.Logging;
 
-namespace PrismaDot.Logging
+/// <summary>
+/// Simple logger for Godot
+/// </summary>
+public class GodotLogger : ILogger
 {
-    using Microsoft.Extensions.Logging;
+    private readonly string _category;
 
-    /// <summary>
-    /// Simple logger for Godot
-    /// </summary>
-    public class GodotLogger : ILogger
+    public GodotLogger(string category) => _category = category;
+
+    public IDisposable BeginScope<TState>(TState state) => null;
+
+    public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
+
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
+        Exception exception, Func<TState, Exception, string> formatter)
     {
-        private readonly string _category;
+        if (!IsEnabled(logLevel)) return;
 
-        public GodotLogger(string category) => _category = category;
+        var message = formatter(state, exception);
+        var logMessage = $"[{_category}] {message}";
 
-        public IDisposable BeginScope<TState>(TState state) => null;
+        if (exception != null)
+            logMessage += $"\n{exception}";
 
-        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
-            Exception exception, Func<TState, Exception, string> formatter)
-        {
-            if (!IsEnabled(logLevel)) return;
-
-            var message = formatter(state, exception);
-            var logMessage = $"[{_category}] {message}";
-
-            if (exception != null)
-                logMessage += $"\n{exception}";
-
-            if (logLevel >= LogLevel.Error)
-                GD.PrintErr(logMessage);
-            else if (logLevel >= LogLevel.Warning)
-                GD.PushWarning(logMessage);
-            else
-                GD.Print(logMessage);
-        }
+        if (logLevel >= LogLevel.Error)
+            GD.PrintErr(logMessage);
+        else if (logLevel >= LogLevel.Warning)
+            GD.PushWarning(logMessage);
+        else
+            GD.Print(logMessage);
     }
 }
