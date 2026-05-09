@@ -2,10 +2,10 @@ using Godot;
 
 namespace PrismaDot.GameLauncher.UI;
 
-public class BaseView : Control, IView
+public partial class BaseView : Control, IView
 {
-    public virtual void Show() { } 
-    public virtual void Hide() { } 
+    public new virtual void Show() { } 
+    public new virtual void Hide() { } 
     public virtual void AfterShow() { } 
     public virtual void BeforeHide() { }
 }

@@ -32,3 +32,7 @@ pivot_offset = Vector2(600, 300)
 size_flags_horizontal = 4
 size_flags_vertical = 4
 color = Color(1, 1, 1, 0.18431373)
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="Boot/UIRoot" unique_id=1568155349]
+offset_right = 40.0
+offset_bottom = 40.0
